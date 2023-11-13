@@ -112,6 +112,20 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
+
+            <MenuItem>
+                <MenuItem.Header>
+                    <TextBlock Text="Tools" />
+                </MenuItem.Header>
+                <MenuItem Command="{Binding MergeCommand}">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Icons/Merge.png" Width="16" Height="16"/>
+                    </MenuItem.Icon>
+                    <MenuItem.Header>
+                        <TextBlock Text="Merge (update) file" />
+                    </MenuItem.Header>
+                </MenuItem>
+            </MenuItem>
         </Menu>
 
         <StackPanel Grid.Row="1">

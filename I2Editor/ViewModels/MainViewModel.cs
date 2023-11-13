@@ -1,7 +1,9 @@
 ﻿using I2Editor.Common;
 using I2LanguagesLib;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 
@@ -164,4 +166,70 @@ public sealed class MainViewModel : BaseViewModel
 			MessageBox.Show(ex.Message, "Error loading CSV!", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
 	}
+
+	private RelayCommand? _mergeCommand;
+	public RelayCommand MergeCommand => _mergeCommand ??= new RelayCommand(Merge);
+
+	private void Merge()
+	{
+		// Allows to copy json values from one file to another, if the keys match.
+		// Useful when you need to migrate to a new version of the file.
+
+		// Ask for new file with new structure
+		FileDialog dialog = new OpenFileDialog
+		{
+			Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*",
+			Title = "Select locale file from NEW version"
+		};
+
+		if (dialog.ShowDialog() != true)
+			return;
+
+		var template = dialog.FileName;
+
+		// Ask for old file with old values
+		dialog = new OpenFileDialog
+		{
+			Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*",
+            Title = "Select locale with your changes"
+        };
+
+		if (dialog.ShowDialog() != true)
+			return;
+
+		var values = dialog.FileName;
+
+		try
+		{  
+			// Load both files
+			var templateJson = File.ReadAllText(template);
+			var valuesJson = File.ReadAllText(values);
+
+			// Deserialize them
+			var templateObj = JsonConvert.DeserializeObject<Dictionary<string, string>>(templateJson);
+			var valuesObj = JsonConvert.DeserializeObject<Dictionary<string, string>>(valuesJson);
+
+			if (templateObj is null || valuesObj is null)
+                throw new Exception("Failed to deserialize files!");
+
+			var merged = ExportUtils.Merge(templateObj, valuesObj);
+			// Serialize merged file to json and save it
+			var json = JsonConvert.SerializeObject(merged, Formatting.Indented);
+			var saveDialog = new SaveFileDialog
+			{
+                Filter = "JSON file (*.json)|*.json|All files (*.*)|*.*",
+                Title = "Select where to save merged file"
+            };
+
+			if (saveDialog.ShowDialog() != true)
+				return;
+
+			var path = saveDialog.FileName;
+			File.WriteAllText(path, json);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message, "Error merging files!", MessageBoxButton.OK, MessageBoxImage.Error);
+		}
+    }
 }
