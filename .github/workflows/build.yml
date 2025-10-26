@@ -1,0 +1,33 @@
+name: Build I2Editor
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore I2Editor.sln
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Release
+        run: msbuild I2Editor.sln /p:Configuration=Release /m
+
+      - name: Upload artifact (I2Editor)
+        uses: actions/upload-artifact@v4
+        with:
+          name: I2Editor-Release
+          path: |
+            I2Editor/bin/Release/**
